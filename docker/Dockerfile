@@ -54,7 +54,7 @@ RUN apt-get install -y ros-melodic-rqt ros-melodic-rqt-common-plugins
 
 RUN apt-get install -y byobu vim
 
-RUN apt-get update && apt-get install python-pip
+RUN apt-get update && apt-get install -y python-pip
 
 
 WORKDIR /workspace
