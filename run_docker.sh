@@ -9,6 +9,7 @@ docker run -ti \
 --ipc=host \
 -v /tmp/.X11-unix:/tmp/.X11-unix \
 -v /dev/bus/usb:/dev/bus/usb \
+-v /dev/input:/dev/input \
 -e DISPLAY=$DISPLAY \
 -v $PWD/.ros:/root/.ros \
 -v $PWD:/workspace \

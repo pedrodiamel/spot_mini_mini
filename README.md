@@ -127,11 +127,17 @@ Yaw logic based on [4-wheel steering car](http://www.inase.org/library/2014/sant
 * Numpy
 
 ### Docker
+Install docker v19.03+
 
 - Build and Run
 
       docker build -f "docker/Dockerfile" -t dogros:latest .
       bash run_docker.sh
+
+- Run
+      xhost +
+      docker start dogros-run
+      docker attach dogros-run
 
 
 ### Joystick Control with ROS

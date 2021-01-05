@@ -1,0 +1,5 @@
+gym
+pybullet
+numpy==1.16.6
+scipy
+opencv-python==4.2.0.32
