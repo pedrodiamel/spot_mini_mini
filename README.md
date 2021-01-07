@@ -127,7 +127,8 @@ Yaw logic based on [4-wheel steering car](http://www.inase.org/library/2014/sant
 * Numpy
 
 ### Docker
-Install docker v19.03+
+[Install nvidia docker v19.03+](
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
 - Build and Run
 
@@ -135,6 +136,7 @@ Install docker v19.03+
       bash run_docker.sh
 
 - Run
+
       xhost +
       docker start dogros-run
       docker attach dogros-run

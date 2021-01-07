@@ -1,3 +1,7 @@
+
+CMakeLists.txt
+.ros
+
 venv/
 .idea/
 *.egg-info
