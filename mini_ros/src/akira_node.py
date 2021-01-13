@@ -48,14 +48,14 @@ alpha = 0.7
 class SpotCommander():
     def __init__(self):
 
-        rospy.init_node('Policies', anonymous=True)
+        rospy.init_node('Walk', anonymous=True)
         self.agents = {}
         # self.movetypes = [
         #     "Forward", "Backward", "Left", "Right", "CW", "CCW", "Stop"
         # ]
         self.movetypes = ["Stop"]
         self.mini_cmd = MiniCmd()
-        self.jb = JoyButtons()
+        #self.jb = JoyButtons()
         self.mini_cmd.x_velocity = 0.0
         self.mini_cmd.y_velocity = 0.0
         self.mini_cmd.rate = 0.0
@@ -80,9 +80,12 @@ class SpotCommander():
         self.load_spot()
         # mini_cmd_cb from mini_cmd topic
         self.sub_cmd = rospy.Subscriber('mini_cmd', MiniCmd, self.mini_cmd_cb)
-        self.sub_jb = rospy.Subscriber('joybuttons', JoyButtons, self.jb_cb)
+        #self.sub_jb = rospy.Subscriber('joybuttons', JoyButtons, self.jb_cb)
         self.time = rospy.get_time()
-        print("READY TO GO! 12345555555")
+	
+	# Publishers
+	self.pub = rospy.Publisher('mini_cmd', MiniCmd, queue_size=1)
+        print("READY TO GO!")
 
     def load_spot(self):
 
@@ -130,85 +133,85 @@ class SpotCommander():
         except rospy.ROSInterruptException:
             pass
 
-    def jb_cb(self, jb):
-        """ Reads the desired additional joystick buttons
-
-            Args: jb
-        """
-        try:
-            # Update jb
-            self.jb = jb
-            # log input data as debug-level message
-            rospy.logdebug(jb)
-        except rospy.ROSInterruptException:
-            pass
+    #def jb_cb(self, jb):
+     #   """ Reads the desired additional joystick buttons
+#
+ #           Args: jb
+  #      """
+   #     try:
+    #        # Update jb
+     #       self.jb = jb
+      #      # log input data as debug-level message
+       #     rospy.logdebug(jb)
+        #except rospy.ROSInterruptException:
+         #   pass
 
     def move(self):
-        """ Turn joystick inputs into commands
-        """
+        # """ Turn joystick inputs into commands
+        # """
 
-        if self.mini_cmd.motion != "Stop":
-            self.StepVelocity = self.BaseStepVelocity
-            self.SwingPeriod = np.clip(
-                self.BaseSwingPeriod +
-                (-self.mini_cmd.faster + -self.mini_cmd.slower) * SV_SCALE,
-                0.1, 0.3)
-            if self.mini_cmd.movement == "Stepping":
-                StepLength = self.mini_cmd.x_velocity + abs(
-                    self.mini_cmd.y_velocity * 0.66)
-                StepLength = np.clip(StepLength, -1.0, 1.0)
-                StepLength *= STEPLENGTH_SCALE
-                LateralFraction = self.mini_cmd.y_velocity * np.pi / 2
-                YawRate = self.mini_cmd.rate * YAW_SCALE
-                # x offset
-                pos = np.array(
-                    [0.0, 0.0, self.mini_cmd.z * Z_SCALE_CTRL])
-                orn = np.array([0.0, 0.0, 0.0])
-            else:
-                StepLength = 0.0
-                LateralFraction = 0.0
-                YawRate = 0.0
-                # RESET
-                self.ClearanceHeight = self.BaseClearanceHeight
-                self.PenetrationDepth = self.BasePenetrationDepth
-                self.StepVelocity = self.BaseStepVelocity
-                # x offset
-                pos = np.array(
-                    [0.0, 0.0, self.mini_cmd.z * Z_SCALE_CTRL])
-                orn = np.array([
-                    self.mini_cmd.roll * RPY_SCALE,
-                    self.mini_cmd.pitch * RPY_SCALE,
-                    self.mini_cmd.yaw * RPY_SCALE
-                ])
-        else:
-            StepLength = 0.0
-            LateralFraction = 0.0
-            YawRate = 0.0
-            # RESET
-            self.ClearanceHeight = self.BaseClearanceHeight
-            self.PenetrationDepth = self.BasePenetrationDepth
-            self.StepVelocity = self.BaseStepVelocity
-            self.SwingPeriod = self.BaseSwingPeriod
-            pos = np.array([0.0, 0.0, 0.0])
-            orn = np.array([0.0, 0.0, 0.0])
+        # if self.mini_cmd.motion != "Stop":
+        #     self.StepVelocity = self.BaseStepVelocity
+        #     self.SwingPeriod = np.clip(
+        #         self.BaseSwingPeriod +
+        #         (-self.mini_cmd.faster + -self.mini_cmd.slower) * SV_SCALE,
+        #         0.1, 0.3)
+        #     if self.mini_cmd.movement == "Stepping":
+        #         StepLength = self.mini_cmd.x_velocity + abs(
+        #             self.mini_cmd.y_velocity * 0.66)
+        #         StepLength = np.clip(StepLength, -1.0, 1.0)
+        #         StepLength *= STEPLENGTH_SCALE
+        #         LateralFraction = self.mini_cmd.y_velocity * np.pi / 2
+        #         YawRate = self.mini_cmd.rate * YAW_SCALE
+        #         # x offset
+        #         pos = np.array(
+        #             [0.0, 0.0, self.mini_cmd.z * Z_SCALE_CTRL])
+        #         orn = np.array([0.0, 0.0, 0.0])
+        #     else:
+        #         StepLength = 0.0
+        #         LateralFraction = 0.0
+        #         YawRate = 0.0
+        #         # RESET
+        #         self.ClearanceHeight = self.BaseClearanceHeight
+        #         self.PenetrationDepth = self.BasePenetrationDepth
+        #         self.StepVelocity = self.BaseStepVelocity
+        #         # x offset
+        #         pos = np.array(
+        #             [0.0, 0.0, self.mini_cmd.z * Z_SCALE_CTRL])
+        #         orn = np.array([
+        #             self.mini_cmd.roll * RPY_SCALE,
+        #             self.mini_cmd.pitch * RPY_SCALE,
+        #             self.mini_cmd.yaw * RPY_SCALE
+        #         ])
+        # else:
+        #     StepLength = 0.0
+        #     LateralFraction = 0.0
+        #     YawRate = 0.0
+        #     # RESET
+        #     self.ClearanceHeight = self.BaseClearanceHeight
+        #     self.PenetrationDepth = self.BasePenetrationDepth
+        #     self.StepVelocity = self.BaseStepVelocity
+        #     self.SwingPeriod = self.BaseSwingPeriod
+        #     pos = np.array([0.0, 0.0, 0.0])
+        #     orn = np.array([0.0, 0.0, 0.0])
 
-        # TODO: integrate into controller
-        self.ClearanceHeight += self.jb.updown * CHPD_SCALE
-        self.PenetrationDepth += self.jb.leftright * CHPD_SCALE
+        # # TODO: integrate into controller
+        # #self.ClearanceHeight += self.jb.updown * CHPD_SCALE
+        # #self.PenetrationDepth += self.jb.leftright * CHPD_SCALE
 
-        # Manual Reset
-        if self.jb.left_bump or self.jb.right_bump:
-            self.ClearanceHeight = self.BaseClearanceHeight
-            self.PenetrationDepth = self.BasePenetrationDepth
-            self.StepVelocity = self.BaseStepVelocity
-            self.SwingPeriod = self.BaseSwingPeriod
-            self.env.reset()
+        # # Manual Reset
+        # #if self.jb.left_bump or self.jb.right_bump:
+        #     #self.ClearanceHeight = self.BaseClearanceHeight
+        #     #self.PenetrationDepth = self.BasePenetrationDepth
+        #     #self.StepVelocity = self.BaseStepVelocity
+        #     #self.SwingPeriod = self.BaseSwingPeriod
+        #     #self.env.reset()
 
 
-        # print("SL: {} \tSV: {} \nLAT: {} \tYAW: {}".format(
-        #     StepLength, self.StepVelocity, LateralFraction, YawRate))
-        # print("BASE VEL: {}".format(self.BaseStepVelocity))
-        # print("---------------------------------------")
+        # # print("SL: {} \tSV: {} \nLAT: {} \tYAW: {}".format(
+        # #     StepLength, self.StepVelocity, LateralFraction, YawRate))
+        # # print("BASE VEL: {}".format(self.BaseStepVelocity))
+        # # print("---------------------------------------")
 
         contacts = self.state[-4:]
 
@@ -217,9 +220,17 @@ class SpotCommander():
         # print("dt: {}".format(dt))
         self.time = rospy.get_time()
 
-        # Update Step Period
+        # Mexemos aqui
+        pos = np.array([0.0, 0.0, 0.0])
+        orn = np.array([0.0, 0.0, 0.0])
+        self.SwingPeriod = 0.2
         self.bzg.Tswing = self.SwingPeriod
-
+        self.StepVelocity = 0.50
+        StepLength = 0.045
+        LateralFraction = 0.0
+        YawRate = 0.0
+        self.ClearanceHeight = 0.045
+        self.PenetrationDepth = 0.003
         self.T_bf = self.bzg.GenerateTrajectory(StepLength, LateralFraction,
                                                 YawRate, self.StepVelocity,
                                                 self.T_bf0, self.T_bf,
@@ -241,11 +252,11 @@ class SpotCommander():
 def main():
     """ The main() function. """
     mini_commander = SpotCommander()
-    rate = rospy.Rate(600.0)
+    rate = rospy.Rate(600.0) # Frequency of the cycle to make reading uniform (Hz)
     while not rospy.is_shutdown():
         # This is called continuously. Has timeout functionality too
         mini_commander.move()
-        rate.sleep()
+        rate.sleep() # Wait to maintain the frequency constant
         # rospy.spin()
 
 

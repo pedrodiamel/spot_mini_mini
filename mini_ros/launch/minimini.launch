@@ -1,0 +1,9 @@
+<launch>
+
+<!-- Load Environment and Model -->
+<node name="MiniMini" pkg="mini_ros" type="minimini_node.py" output="screen"/>
+
+<!-- Camera Guide -->
+<node name="guide" pkg="mini_ros" type="guide_node.py" output="screen"/>
+
+</launch>
