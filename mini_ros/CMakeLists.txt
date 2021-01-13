@@ -194,6 +194,7 @@ ${catkin_LIBRARIES}
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
+  src/spot_controller
   src/spot_pybullet_interface
   src/spot_real_interface
   src/servo_calibration

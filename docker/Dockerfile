@@ -50,7 +50,7 @@ RUN apt-get install -y ros-melodic-gazebo-ros ros-melodic-controller-manager ros
 
 RUN apt-get install -y ros-melodic-kdl-conversions ros-melodic-kdl-parser ros-melodic-forward-command-controller ros-melodic-tf-conversions ros-melodic-xacro ros-melodic-joint-state-publisher ros-melodic-robot-state-publisher
 
-RUN apt-get install -y ros-melodic-rqt ros-melodic-rqt-common-plugins ros-melodic-joy
+RUN apt-get install -y ros-melodic-rqt ros-melodic-rqt-common-plugins ros-melodic-joy ros-melodic-joint-state-publisher-gui ros-melodic-rviz
 
 RUN apt-get install -y byobu vim
 
