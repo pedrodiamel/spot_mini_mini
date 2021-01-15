@@ -3,6 +3,7 @@
 xhost +
 
 docker run -ti \
+--gpus=all \
 --privileged=true \
 --cap-add=CAP_SYS_ADMIN \
 --ipc=host \
