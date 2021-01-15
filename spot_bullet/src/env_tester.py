@@ -111,12 +111,11 @@ def main():
 
     g_u_i = GUI(env.spot.quadruped)
 
-    # COPIAR - GERA O MODELO
     spot = SpotModel()
     T_bf0 = spot.WorldToFoot
     T_bf = copy.deepcopy(T_bf0)
+
     bzg = BezierGait(dt=env._time_step)
-    # TERMINAR DE COPIAR
 
     bz_step = BezierStepper(dt=env._time_step, mode=0)
 
@@ -191,7 +190,7 @@ def main():
         # print("IMU GX: {}".format(state[2]))
         # print("IMU GY: {}".format(state[3]))
         # print("IMU GZ: {}".format(state[4]))
-        # print("IMU AX: {}".format(state[5]))m
+        # print("IMU AX: {}".format(state[5]))
         # print("IMU AY: {}".format(state[6]))
         # print("IMU AZ: {}".format(state[7]))
         # print("-------------------------")

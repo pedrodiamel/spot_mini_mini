@@ -50,13 +50,13 @@ RUN apt-get install -y ros-melodic-gazebo-ros ros-melodic-controller-manager ros
 
 RUN apt-get install -y ros-melodic-kdl-conversions ros-melodic-kdl-parser ros-melodic-forward-command-controller ros-melodic-tf-conversions ros-melodic-xacro ros-melodic-joint-state-publisher ros-melodic-robot-state-publisher
 
-RUN apt-get install -y ros-melodic-rqt ros-melodic-rqt-common-plugins
+RUN apt-get install -y ros-melodic-rqt ros-melodic-rqt-common-plugins ros-melodic-joy ros-melodic-joint-state-publisher-gui ros-melodic-rviz
 
 RUN apt-get install -y byobu vim
 
 RUN apt-get update && apt-get install -y python-pip
 
 
-WORKDIR /workspace
-COPY requirements.txt /workspace
+WORKDIR /root/catkin_ws/src
+COPY requirements.txt /root/catkin_ws/src
 RUN pip install -r requirements.txt
