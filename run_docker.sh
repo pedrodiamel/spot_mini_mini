@@ -3,7 +3,6 @@
 xhost +
 
 docker run -ti \
---gpus=all \
 --privileged=true \
 --cap-add=CAP_SYS_ADMIN \
 --ipc=host \
@@ -12,7 +11,7 @@ docker run -ti \
 -v /dev/input:/dev/input \
 -e DISPLAY=$DISPLAY \
 -v $PWD/.ros:/root/.ros \
--v $PWD:/root/catkin_ws/src \
+-v $PWD:/workspace \
 -p 6006:6006 \
 --name dogros-run dogros:latest \
 /bin/bash

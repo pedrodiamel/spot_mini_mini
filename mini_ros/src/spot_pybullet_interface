@@ -82,7 +82,7 @@ class SpotCommander():
         self.sub_cmd = rospy.Subscriber('mini_cmd', MiniCmd, self.mini_cmd_cb)
         self.sub_jb = rospy.Subscriber('joybuttons', JoyButtons, self.jb_cb)
         self.time = rospy.get_time()
-        print("READY TO GO! 12345555555")
+        print("READY TO GO!")
 
     def load_spot(self):
 

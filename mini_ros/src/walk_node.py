@@ -37,7 +37,8 @@ import os
 import rospy
 import numpy as np
 from mini_ros.msg import MiniCmd
-from std_msgs.msg import String, Float64
+from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import copy
 import time
 
@@ -131,6 +132,9 @@ class SpotCommander():
         # Load the SpotMiniMini features model:
         self.LoadSpot()
 
+        # Initialize message 
+        self.InitMsg()
+
         # Define Publishers:
         self.SetPublishers()
 
@@ -172,6 +176,26 @@ class SpotCommander():
 
         self.bzg = BezierGait(dt=self.dt)
 
+
+    #---- Define Control Messages ----#
+    def InitMsg(self):
+        """
+        Define control message header.
+        """
+        self.jt_msg = JointTrajectory()
+        self.jt_msg.header.stamp = rospy.Time.now()
+        self.jt_msg.joint_names.append("motor_front_left_hip" )
+        self.jt_msg.joint_names.append("motor_front_left_upper_leg" )
+        self.jt_msg.joint_names.append("motor_front_left_lower_leg" )
+        self.jt_msg.joint_names.append("motor_front_right_hip" )
+        self.jt_msg.joint_names.append("motor_front_right_upper_leg" )
+        self.jt_msg.joint_names.append("motor_front_right_lower_leg" )
+        self.jt_msg.joint_names.append("motor_back_left_hip" )
+        self.jt_msg.joint_names.append("motor_back_left_upper_leg" )
+        self.jt_msg.joint_names.append("motor_back_left_lower_leg" )
+        self.jt_msg.joint_names.append("motor_back_right_hip" )
+        self.jt_msg.joint_names.append("motor_back_right_upper_leg" )
+        self.jt_msg.joint_names.append("motor_back_right_lower_leg" )
     
 
     #---- Define Motion Publishers ----#
@@ -181,32 +205,35 @@ class SpotCommander():
         Define all publishers needed for a movement node.
         """
 
-        # Information srtorage message publisher:
+        # Information storage message publisher:
         self.pub_MiniCmd = rospy.Publisher('mini_cmd', MiniCmd, queue_size=1)
 
-        # Defining publishers to move the motors position:
-        # Front Left Leg:
-        pub_FLH = rospy.Publisher("spot/front_left_hip_position_controller/command", Float64, queue_size=10)
-        pub_FLL = rospy.Publisher("spot/front_left_leg_position_controller/command", Float64, queue_size=10)
-        pub_FLF = rospy.Publisher("spot/front_left_foot_position_controller/command", Float64, queue_size=10)
-        # Front Right Leg:
-        pub_FRH = rospy.Publisher("spot/front_right_hip_position_controller/command", Float64, queue_size=10)
-        pub_FRL = rospy.Publisher("spot/front_right_leg_position_controller/command", Float64, queue_size=10)
-        pub_FRF = rospy.Publisher("spot/front_right_foot_position_controller/command", Float64, queue_size=10)
-        # Back or Rear Left Leg:
-        pub_BLH = rospy.Publisher("spot/back_left_hip_position_controller/command", Float64, queue_size=10)
-        pub_BLL = rospy.Publisher("spot/back_left_leg_position_controller/command", Float64, queue_size=10)
-        pub_BLF = rospy.Publisher("spot/back_left_foot_position_controller/command", Float64, queue_size=10)
-        # Back or Rear Right Leg:
-        pub_BRH = rospy.Publisher("spot/back_right_hip_position_controller/command", Float64, queue_size=10)
-        pub_BRL = rospy.Publisher("spot/back_right_leg_position_controller/command", Float64, queue_size=10)
-        pub_BRF = rospy.Publisher("spot/back_right_foot_position_controller/command", Float64, queue_size=10)
+        # Joint angle publisher
+        self.ja_pub = rospy.Publisher('/spot/joint_group_position_controller/command', JointTrajectory, queue_size=1)
 
-        # Store all publishers in the class attribute:
-        self.move_publishers = [pub_FLH, pub_FLL, pub_FLF,
-                                pub_FRH, pub_FRL, pub_FRF,
-                                pub_BLH, pub_BLL, pub_BLF,
-                                pub_BRH, pub_BRL, pub_BRF]
+        # # Defining publishers to move the motors position:
+        # # Front Left Leg:
+        # pub_FLH = rospy.Publisher("spot/front_left_hip_position_controller/command", Float64, queue_size=10)
+        # pub_FLL = rospy.Publisher("spot/front_left_leg_position_controller/command", Float64, queue_size=10)
+        # pub_FLF = rospy.Publisher("spot/front_left_foot_position_controller/command", Float64, queue_size=10)
+        # # Front Right Leg:
+        # pub_FRH = rospy.Publisher("spot/front_right_hip_position_controller/command", Float64, queue_size=10)
+        # pub_FRL = rospy.Publisher("spot/front_right_leg_position_controller/command", Float64, queue_size=10)
+        # pub_FRF = rospy.Publisher("spot/front_right_foot_position_controller/command", Float64, queue_size=10)
+        # # Back or Rear Left Leg:
+        # pub_BLH = rospy.Publisher("spot/back_left_hip_position_controller/command", Float64, queue_size=10)
+        # pub_BLL = rospy.Publisher("spot/back_left_leg_position_controller/command", Float64, queue_size=10)
+        # pub_BLF = rospy.Publisher("spot/back_left_foot_position_controller/command", Float64, queue_size=10)
+        # # Back or Rear Right Leg:
+        # pub_BRH = rospy.Publisher("spot/back_right_hip_position_controller/command", Float64, queue_size=10)
+        # pub_BRL = rospy.Publisher("spot/back_right_leg_position_controller/command", Float64, queue_size=10)
+        # pub_BRF = rospy.Publisher("spot/back_right_foot_position_controller/command", Float64, queue_size=10)
+
+        # # Store all publishers in the class attribute:
+        # self.move_publishers = [pub_FLH, pub_FLL, pub_FLF,
+        #                         pub_FRH, pub_FRL, pub_FRF,
+        #                         pub_BLH, pub_BLL, pub_BLF,
+        #                         pub_BRH, pub_BRL, pub_BRF]
 
     
     #---- Define Motion Subscribers ----#
@@ -255,7 +282,7 @@ class SpotCommander():
             # Set parameters based on message content
             if (msg.data == "F"):
                 self.SwingPeriod = 0.2
-                self.StepVelocity = 0.50
+                self.StepVelocity = 0.5
                 self.StepLength = 0.045
                 self.LateralFraction = 0.0
                 self.YawRate = 0.0
@@ -338,20 +365,46 @@ class SpotCommander():
 
         joint_angles = self.spot.IK(orn, pos, self.T_bf)
 
+        # Store angles in message
+        self.InitMsg()
+        p = JointTrajectoryPoint()
+
+        p.positions.append( joint_angles[0][0] )
+        p.positions.append( joint_angles[0][1] )
+        p.positions.append( joint_angles[0][2] )
+
+        p.positions.append( joint_angles[1][0] )
+        p.positions.append( joint_angles[1][1] )
+        p.positions.append( joint_angles[1][2] )
+
+        p.positions.append( joint_angles[2][0] )
+        p.positions.append( joint_angles[2][1] )
+        p.positions.append( joint_angles[2][2] )
+
+        p.positions.append( joint_angles[3][0] )
+        p.positions.append( joint_angles[3][1] )
+        p.positions.append( joint_angles[3][2] )
+
+        self.jt_msg.points.append(p)
+
+        # Move Type
+        self.jt_msg.points[0].time_from_start = rospy.Duration.from_sec( dt )
+        self.ja_pub.publish(self.jt_msg)
+
         # Publish motor angles configuration for robot:
-        self.PublishAngles(joint_angles.reshape(-1))
+        # self.PublishAngles(joint_angles.reshape(-1))
 
 
-    def PublishAngles(self, target):
-        """
-        Publishes the motor messages to move all motors.
-        """
-        # Loop to make all publishers publish:
-        for i in range(12):
-            # Log the message so we can debug:
-            #rospy.loginfo(self.lowCmd_msg.motorCmd[i].position)
-            # Publish the message:
-            self.move_publishers[i].publish(target[i])
+    # def PublishAngles(self, target):
+    #     """
+    #     Publishes the motor messages to move all motors.
+    #     """
+    #     # Loop to make all publishers publish:
+    #     for i in range(12):
+    #         # Log the message so we can debug:
+    #         #rospy.loginfo(self.lowCmd_msg.motorCmd[i].position)
+    #         # Publish the message:
+    #         self.move_publishers[i].publish(target[i])
 
 
 

@@ -1,0 +1,145 @@
+#!/usr/bin/env python
+"""
+DESCRIPTION:
+
+SUBSCRIBERS:
+"""
+
+from __future__ import division
+import os
+import copy
+import sys
+import numpy as np
+
+import rospy
+import rospkg
+rospack = rospkg.RosPack()
+
+from mini_ros.msg import MiniCmd, JoyButtons
+
+sys.path.append(rospack.get_path('mini_ros') + '/../')
+sys.path.append('../../')
+
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+class SpotCommander():
+    def __init__(self):
+
+        rospy.init_node('Policies', anonymous=True)
+
+        self.movetypes = ["Stop"]
+        self.mini_cmd = MiniCmd()
+        self.jb = JoyButtons()
+
+        # mini_cmd_cb from mini_cmd topic
+        self.mini_cmd.x_velocity = 0.0
+        self.mini_cmd.y_velocity = 0.0
+        self.mini_cmd.rate = 0.0
+        self.mini_cmd.roll = 0.0
+        self.mini_cmd.pitch = 0.0
+        self.mini_cmd.yaw = 0.0
+        self.mini_cmd.z = 0.0
+        self.mini_cmd.motion = "Stop"
+        self.mini_cmd.movement = "Stepping"
+
+
+        self.sub_cmd = rospy.Subscriber('mini_cmd', MiniCmd, self.mini_cmd_cb)
+        self.sub_jb = rospy.Subscriber('joybuttons', JoyButtons, self.jb_cb)
+        self.time = rospy.get_time()
+
+        self.ja_pub = rospy.Publisher('/spot/joint_group_position_controller/command', JointTrajectory, queue_size=1)
+
+        print("READY TO GO!")
+
+
+    def mini_cmd_cb(self, mini_cmd):
+        """ Reads the desired Minitaur command and passes it for execution
+
+            Args: mini_cmd
+        """
+        try:
+            # Update mini_cmd
+            self.mini_cmd = mini_cmd
+            # log input data as debug-level message
+            rospy.logdebug(mini_cmd)
+        except rospy.ROSInterruptException:
+            pass
+
+    def jb_cb(self, jb):
+        """ Reads the desired additional joystick buttons
+
+            Args: jb
+        """
+        try:
+            # Update jb
+            self.jb = jb
+            # log input data as debug-level message
+            rospy.logdebug(jb)
+        except rospy.ROSInterruptException:
+            pass
+
+
+    def move(self):
+        """ Turn joystick inputs into commands
+        """
+        # print("MOVE ->")
+
+        # Time
+        dt = rospy.get_time() - self.time
+        # print("dt: {}".format(dt))
+        self.time = rospy.get_time()
+
+        jt_msg = JointTrajectory()
+        jt_msg.header.stamp = rospy.Time.now()
+        jt_msg.joint_names.append("motor_front_left_hip" )
+        jt_msg.joint_names.append("motor_front_left_upper_leg" )
+        jt_msg.joint_names.append("motor_front_left_lower_leg" )
+        jt_msg.joint_names.append("motor_front_right_hip" )
+        jt_msg.joint_names.append("motor_front_right_upper_leg" )
+        jt_msg.joint_names.append("motor_front_right_lower_leg" )
+        jt_msg.joint_names.append("motor_back_left_hip" )
+        jt_msg.joint_names.append("motor_back_left_upper_leg" )
+        jt_msg.joint_names.append("motor_back_left_lower_leg" )
+        jt_msg.joint_names.append("motor_back_right_hip" )
+        jt_msg.joint_names.append("motor_back_right_upper_leg" )
+        jt_msg.joint_names.append("motor_back_right_lower_leg" )
+
+        p = JointTrajectoryPoint()
+        # for i in range(12):
+        #     p.positions.append(10.0)
+
+        p.positions.append(0.0)
+        p.positions.append( -np.radians(30) )
+        p.positions.append( -np.radians(30) )
+        p.positions.append(0.0)
+        p.positions.append( -np.radians(30) )
+        p.positions.append( -np.radians(30) )
+        p.positions.append(0.0)
+        p.positions.append( -np.radians(30) )
+        p.positions.append( -np.radians(30) )
+        p.positions.append(0.0)
+        p.positions.append( -np.radians(30) )
+        p.positions.append( -np.radians(30) )
+
+        jt_msg.points.append(p)
+        jt_msg.points[0].time_from_start = rospy.Duration.from_sec( 0.01 )
+
+        self.ja_pub.publish(jt_msg)
+
+
+def main():
+    """ The main() function. """
+    mini_commander = SpotCommander()
+    rate = rospy.Rate(600.0)
+    while not rospy.is_shutdown():
+        # This is called continuously. Has timeout functionality too
+        mini_commander.move()
+        rate.sleep()
+        # rospy.spin()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
