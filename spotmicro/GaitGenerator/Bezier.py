@@ -481,7 +481,7 @@ class BezierGait():
 
         # Catch infeasible timesteps
         if Tstance < dt:
-            print("AQUI QUE DEU RUIM")
+            # print("AQUI QUE DEU RUIM")
             Tstance = 0.0
             L = 0.0
             self.TD = False
