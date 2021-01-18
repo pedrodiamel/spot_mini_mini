@@ -158,6 +158,7 @@ class BezierGait():
         # If Tstride = Tswing, Tstance = 0
         # RESET ALL
         if Tstride < self.Tswing + dt:
+            # print("AQUI QUE DEU RUIM")
             self.time = 0.0
             self.time_since_last_TD = 0.0
             self.TD_time = 0.0
@@ -459,6 +460,8 @@ class BezierGait():
         """
         # First, get Tstance from desired speed and stride length
         # NOTE: L is HALF of stride length
+        # print("Entramos !")
+        
         if vel != 0.0:
             Tstance = 2.0 * abs(L) / abs(vel)
         else:
@@ -472,10 +475,13 @@ class BezierGait():
         if dt is None:
             dt = self.dt
 
+        # print("Inside dt = %f" %(dt))
+
         YawRate *= dt
 
         # Catch infeasible timesteps
         if Tstance < dt:
+            print("AQUI QUE DEU RUIM")
             Tstance = 0.0
             L = 0.0
             self.TD = False

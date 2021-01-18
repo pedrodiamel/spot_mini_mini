@@ -15,7 +15,7 @@ import rospy
 import rospkg
 rospack = rospkg.RosPack()
 
-from mini_ros.msg import MiniCmd, JoyButtons, IMUdata, ContactData, AgentData # Mexi aqui
+from mini_ros.msg import MiniCmd, JoyButtons
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 sys.path.append(rospack.get_path('mini_ros') + '/../')
@@ -28,6 +28,7 @@ from spotmicro.GymEnvs.spot_bezier_env import spotBezierEnv
 
 # Initialize Node
 rospy.init_node('Policies', anonymous=True)
+
 
 # Controller Params
 STEPLENGTH_SCALE = rospy.get_param("STEPLENGTH_SCALE")
@@ -123,10 +124,8 @@ class SpotCommander():
 
         self.sub_cmd = rospy.Subscriber('mini_cmd', MiniCmd, self.mini_cmd_cb)
         self.sub_jb = rospy.Subscriber('joybuttons', JoyButtons, self.jb_cb)
-        self.sub_imu = rospy.Subscriber('imu', IMUdata, self.imu_cb, queue_size=1) #Mexi aqui
         self.time = rospy.get_time()
 
-        self.ag_pub = rospy.Publisher('spot/agent', AgentData, queue_size=1) #Mexi aqui
         self.ja_pub = rospy.Publisher('/spot/joint_group_position_controller/command', JointTrajectory, queue_size=1)
 
         print("READY TO GO!")
@@ -160,23 +159,7 @@ class SpotCommander():
         self.action = np.zeros(action_dim)
         self.old_act = self.action[:actions_to_filter]
 
-    def imu_cb(self, imu): # Mexi aqui
-        """ Reads the IMU
 
-            Args: imu
-        """
-        try:
-            # Update imu
-            self.imu = [
-                imu.roll, imu.pitch,
-                np.radians(imu.gyro_x),
-                np.radians(imu.gyro_y),
-                np.radians(imu.gyro_z), imu.acc_x, imu.acc_y, imu.acc_z - 9.81
-            ]
-            # log input data as debug-level message
-            rospy.logdebug(imu)
-        except rospy.ROSInterruptException:
-            pass
 
     def mini_cmd_cb(self, mini_cmd):
         """ Reads the desired Minitaur command and passes it for execution
@@ -275,29 +258,7 @@ class SpotCommander():
             self.SwingPeriod = copy.deepcopy(self.BaseSwingPeriod)
 
         # OPTIONAL: Agent
-        # Mexi aqui
-        if self.Agent and self.mini_cmd.motion != "Stop":
-            phases = copy.deepcopy(self.bzg.Phases)
-            # Total 12
-            state = []
-            # r, p, gz, gy, gz, ax, ay, az (8)
-            state.extend(self.imu)
-            # FL, FR, BL, BR (4)
-            state.extend(phases)
-            # FL, FR, BL, BR (4)
-            if self.enable_contact:
-                state.extend(self.contacts)
-            self.normalizer.observe(state)
-            # Don't normalize contacts
-            state[:-4] = self.normalizer.normalize(state)[:-4]
-            self.action = self.policy.evaluate(state, None, None)
-            self.action = np.tanh(self.action)
-            # EXP FILTER
-            self.action[:actions_to_filter] = alpha * self.old_act + (
-                1.0 - alpha) * self.action[:actions_to_filter]
-            self.old_act = self.action[:actions_to_filter]
-
-            self.ClearanceHeight += self.action[0] * CD_SCALE
+        # ...
 
 
         # Time
