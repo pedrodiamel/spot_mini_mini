@@ -65,7 +65,7 @@ def camera_cb(msg):
         if (msg.data[i] == color): #ball is present
 
             # Calculate horizontal pixel position:
-            j = i % img.step
+            j = i % msg.step
 
             # Check pixel position
             if (j < treshold): #pixel on the left side
@@ -85,7 +85,6 @@ def camera_cb(msg):
 
     #finished the loop:    
     #no_ball will still be true if white ball is not present in the image!
-
     if (no_ball): #no white ball in sight
         # Stop:
         com = "S"

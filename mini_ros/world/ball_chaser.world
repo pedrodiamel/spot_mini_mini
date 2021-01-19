@@ -22,18 +22,12 @@
             </ode>
         </physics>
 
-        <scene>
-        <sky>
-            <clouds>
-                <speed>12</speed>
-            </clouds>
-        </sky>
-        </scene>
 
         <!-- A global light source -->
         <include>
             <uri>model://sun</uri>
         </include>
+
 
         <!-- Ground plane with friction-->
         <model name="ground_plane">
@@ -63,32 +57,22 @@
                 <size>100 100</size>
               </plane>
             </geometry>
+            <material>
+                <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/Grey</name>
+                </script>
+            </material>
           </visual>
             </link>
           </model>
-
-        <!-- A ground plane 
-        <include>
-            <uri>model://ground_plane</uri>
-            <pose>0 0 0 0 0.5 0</pose>
-            <collision name="collision_ground">
-                <pose>0 0 0 0 0.5 0</pose>
-                <surface>
-                    <friction>
-                        <ode>
-                            <mu>1</mu>
-                            <mu2>1</mu2>
-                        </ode>
-                    </friction>
-                </surface>
-            </collision>
-        </include> -->
         
+
         <!-- environment blocks, obstacles or stairs -->
         <model name="static_environment">
-        <static>true</static>        
+        <static>true</static>
+        <pose>-2 2 0.5 0 0 0</pose> <!-- Position relative to the world base -->
             <link name="static_box">
-                <pose>-2 2 0.5 0 0 0</pose>
                 <collision name="static_box_collision">
                     <geometry>
                         <box>
@@ -110,7 +94,46 @@
             </link>
         </model>
 
+
         <!-- White ball model -->
+        <model name="white_ball">
+        <pose>-2 0 0.1 0 0 0</pose>  <!-- Position relative to the world base -->  
+            <link name="static_box">
+                <collision name="white_ball_collision">
+                    <geometry>
+                        <sphere>
+                            <radius>0.1</radius>
+                        </sphere>
+                    </geometry>
+                </collision>
+                <visual name="white_ball_visual">
+                    <geometry>
+                        <sphere>
+                            <radius>0.1</radius>
+                        </sphere>
+                    </geometry>
+                    <material>
+                        <lighting>1</lighting>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/Grey</name>
+                        </script>
+                        <shader type='pixel'>
+                            <normal_map>__default__</normal_map>
+                        </shader>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                        <specular>1 1 1 1</specular>
+                        <emissive>1 1 1 1</emissive>
+                        <!-- <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/White</name>
+                        </script> -->
+                    </material>
+                </visual>
+            </link>
+        </model>
+
 
     </world>
 </sdf>
