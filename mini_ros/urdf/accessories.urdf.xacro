@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
+    <!-- <xacro:include filename="$(find hector_sensors_description)/urdf/hokuyo_utm30lx.urdf.xacro" />
     <xacro:include filename="$(find hector_sensors_description)/urdf/asus_camera.urdf.xacro" />
 
     <xacro:hokuyo_utm30lx 
@@ -16,7 +16,7 @@
     
     <gazebo reference="hokuyo_frame">
 		<material>Gazebo/FlatBlack</material>
-	</gazebo>
+	</gazebo> -->
 
     <!-- <xacro:asus_camera 
         parent="base_link" 
@@ -24,7 +24,7 @@
         <origin xyz="0.2 0.0 0.05" rpy="0 0 0"/>
     </xacro:asus_camera> -->
 
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="imu_controller" filename="libhector_gazebo_ros_imu.so">
             <updateRate>50.0</updateRate>
             <bodyName>imu_link</bodyName>
@@ -37,17 +37,19 @@
             <headingGaussianNoise>0.005</headingGaussianNoise>
         </plugin>
 
-    </gazebo>
+    </gazebo> -->
 
-    <!-- <gazebo reference="imu_link">
-        <gravity>true</gravity>
-        <sensor name="imu_sensor" type="imu">
+
+  <!-- IMU plugin -->
+  <gazebo reference="imu_link">
+      <gravity>true</gravity>
+      <sensor name="imu_sensor" type="imu">
         <always_on>true</always_on>
         <update_rate>100</update_rate>
         <visualize>true</visualize>
         <topic>__default_topic__</topic>
         <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-            <topicName>imu</topicName>
+            <topicName>imu_data</topicName>
             <bodyName>imu_link</bodyName>
             <updateRateHZ>10.0</updateRateHZ>
             <gaussianNoise>0.0</gaussianNoise>
@@ -57,24 +59,29 @@
             <initialOrientationAsReference>false</initialOrientationAsReference>
         </plugin>
         <pose>0 0 0 0 0 0</pose>
-        </sensor>
-    </gazebo> -->
+      </sensor>
+  </gazebo>
 
-    <link name="imu_link">
-        <inertial>
-            <mass value="0.001"/>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <inertia ixx="1e-09" ixy="0.0" ixz="0.0" iyy="1e-09" iyz="0.0" izz="1e-09"/>
-        </inertial>
-    </link>
-    <joint name="imu_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="imu_link" />
-    </joint>
+  <!-- IMU Link -->
+  <link name="imu_link">
+      <inertial>
+          <mass value="0.001"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <inertia ixx="1e-09" ixy="0.0" ixz="0.0" iyy="1e-09" iyz="0.0" izz="1e-09"/>
+      </inertial>
+  </link>
 
-    <!-- camera -->
-  <gazebo reference="camera">
-    <sensor type="camera" name="camera1">
+  <!-- IMU Joint -->
+  <joint name="imu_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="imu_link" />
+  </joint>
+
+
+  <!-- Camera Plugin -->
+  <gazebo reference="camera_link">
+    <material>Gazebo/Red</material>
+    <sensor type="camera" name="spot_camera">
       <update_rate>30.0</update_rate>
       <camera name="head">
         <horizontal_fov>1.3962634</horizontal_fov>
@@ -91,10 +98,10 @@
       <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <cameraName>camera</cameraName>
-        <imageTopicName>rgb/image_raw</imageTopicName>
-        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
-        <frameName>camera</frameName>
+        <cameraName>spot_camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
@@ -106,7 +113,7 @@
   </gazebo>
 
   <!-- Camera Link -->
-  <link name='camera'>
+  <link name='camera_link'>
 
     <inertial>
       <mass value="0.1"/>
@@ -137,7 +144,7 @@
   <!-- Camera Joint -->
   <joint type="fixed" name="camera_joint">
     <origin xyz="0.2 0 0" rpy="0 0 0"/>
-    <child link="camera"/>
+    <child link="camera_link"/>
     <parent link="base_link"/>
     <axis xyz="0 1 0"/>
   </joint>

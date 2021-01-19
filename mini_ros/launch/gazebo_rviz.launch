@@ -22,4 +22,7 @@
   <!-- Include controller launch file -->
   <include file="$(find mini_ros)/launch/controller.launch"/>
 
+  <!-- Open model in RViz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mini_ros)/rviz/camera_spot.rviz" />
+
 </launch>
