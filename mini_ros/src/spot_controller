@@ -10,6 +10,7 @@ import os
 import copy
 import sys
 import numpy as np
+import math
 
 import rospy
 import rospkg
@@ -98,6 +99,14 @@ class SpotCommander():
         self.contacts = [0, 0, 0, 0]
 
         # IMU: R, P, Ax, Ay, Az, Gx, Gy, Gz
+        self.roll = 0
+        self.pitch = 0
+        self.ax = 0
+        self.ay = 0
+        self.az = 0
+        self.gx = 0
+        self.gy = 0
+        self.gz = 0
         self.imu = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # See spot_params.yaml in config
@@ -160,24 +169,59 @@ class SpotCommander():
         self.action = np.zeros(action_dim)
         self.old_act = self.action[:actions_to_filter]
 
+    def euler_from_quaternion(self, x, y, z, w):
+        """
+        Convert a quaternion into euler angles (roll, pitch, yaw)
+        roll is rotation around x in radians (counterclockwise)
+        pitch is rotation around y in radians (counterclockwise)
+        yaw is rotation around z in radians (counterclockwise)
+        """
+        t0 = +2.0 * (w * x + y * z)
+        t1 = +1.0 - 2.0 * (x * x + y * y)
+        roll_x = math.atan2(t0, t1)
+     
+        t2 = +2.0 * (w * y - z * x)
+        t2 = +1.0 if t2 > +1.0 else t2
+        t2 = -1.0 if t2 < -1.0 else t2
+        pitch_y = math.asin(t2)
+     
+        return roll_x, pitch_y # in radians
+
     def imu_cb(self, imu): # Mexi aqui
         """ Reads the IMU
 
             Args: imu
         """
-        print("TESTES2")
+        x = imu.orientation.x
+        y = imu.orientation.y
+        z = imu.orientation.z
+        w = imu.orientation.w
+        self.roll, self.pitch = self.euler_from_quaternion(x,y,z,w)
+        self.gx = np.radians(imu.angular_velocity.x)
+        self.gy = np.radians(imu.angular_velocity.y)
+        self.gz = np.radians(imu.angular_velocity.z)
+        self.ax = imu.linear_acceleration.x
+        self.ay = imu.linear_acceleration.y
+        self.az = imu.linear_acceleration.z
+        # print("TESTES2")
+        # self.imu = [
+        #         self.roll, self.pitch,
+        #         self.gx,
+        #         self.gy,
+        #         self.gz, self.ax, self.ay, self.az - 9.81
+        #     ]
         try:
             # Update imu
-            # self.imu = [
-            #     imu.roll, imu.pitch,
-            #     np.radians(imu.gyro_x),
-            #     np.radians(imu.gyro_y),
-            #     np.radians(imu.gyro_z), imu.acc_x, imu.acc_y, imu.acc_z - 9.81
-            # ]
+            self.imu = [
+                self.roll, self.pitch,
+                self.gx,
+                self.gy,
+                self.gz, self.ax, self.ay, self.az - 9.81
+            ]
             # log input data as debug-level message
             rospy.logdebug(imu)
-            print("TESTE")
-            print(imu)
+            # print("TESTE")
+            print(self.imu)
         except rospy.ROSInterruptException:
             pass
 
@@ -280,6 +324,7 @@ class SpotCommander():
         # OPTIONAL: Agent
         # Mexi aqui
         if self.Agent and self.mini_cmd.motion != "Stop":
+            print("Entrou!")
             phases = copy.deepcopy(self.bzg.Phases)
             # Total 12
             state = []

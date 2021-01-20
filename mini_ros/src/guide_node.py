@@ -14,6 +14,10 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from mini_ros.msg import MiniCmd
 
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
+
 
 #---- Initializing Node ----#
 
@@ -51,7 +55,7 @@ def camera_cb(msg):
     # Obtain the width of each decision block:
     treshold = msg.step/3
     # Ball color value:
-    color = 255
+    color = [255, 255, 255]
     # Flag to indicate if the ball is in the image:
     no_ball = True
     # Direction command:
@@ -59,11 +63,30 @@ def camera_cb(msg):
 
     #-- Analising Image --#
 
+    # Setup a CvBridege object
+    bridge = CvBridge()
+
+    # Convert the image message to an OpenCV image 
+    cv_image = bridge.imgmsg_to_cv2(msg, "bgr8")
+
+    # Define image reading parameters
+    height, width = cv_image.shape[:2]  
+    roi_size = 50 # (10x10)
+    roi_values = cv_image[(height-roi_size)/2:(height+roi_size)/2,(width-roi_size)/2:(width+roi_size)/2]
+
+    # Get the RGB values
+    mean_blue = np.mean(roi_values[:,:,0])
+    mean_green = np.mean(roi_values[:,:,1])
+    mean_red = np.mean(roi_values[:,:,2])
+
+    # print("R: {}  G: {}  B: {}").format(mean_red, mean_green, mean_blue) 
+    
+
     # Iterate through all pixels:
     for i in range(msg.height * msg.step):
-        
-        if (msg.data[i] == color): #ball is present
-
+        # print(msg[i][i])
+        if (mean_red == color[0] and mean_green == color[1] and mean_blue == color[2]): #ball is present
+            
             # Calculate horizontal pixel position:
             j = i % msg.step
 
@@ -97,6 +120,7 @@ def camera_cb(msg):
 #---- Define Subscribers ----#
 
 sub = rospy.Subscriber("/spot_camera/image_raw", Image, camera_cb)
+
 # sub = rospy.Subscriber('mini_cmd', MiniCmd, camera_cb)
 
 
