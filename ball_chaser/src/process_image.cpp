@@ -8,7 +8,7 @@ ros::ServiceClient client;
 // This function calls the /command service to drive the robot in the specified direction
 void guide_robot(char com)
 {
-    ROS_INFO_STREAM("Guiding the robot");
+    ROS_INFO_STREAM(com);
 
     // Request given direction command character
     ball_chaser::WalkToTarget srv;

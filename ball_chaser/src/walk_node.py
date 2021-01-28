@@ -30,35 +30,45 @@ PUBLISHERS: spot/front_left_hip_position_controller/command
 SERVICES:   /command - receives a character to indicate direction of movement
 """
 
-
+#------------------------------------------#
 #---- Importing Libraries and Packages ----#
+#------------------------------------------#
+
+#-- Libraries --#
 
 # from __future__ import division
 import os
 import rospy
 import numpy as np
-from mini_ros.msg import MiniCmd
-# from std_msgs.msg import String
-from ball_chaser.srv import WalkToTarget
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import copy
 import time
-
-import sys
 
 import rospkg 
 rospack = rospkg.RosPack()
 
-
+import sys
 sys.path.append(rospack.get_path('mini_ros') + '/../')
-
 sys.path.append('../../')
+
+#-- Messages --#
+
+from mini_ros.msg import MiniCmd
+# from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+#-- Services --#
+
+from ball_chaser.srv import WalkToTarget, WalkToTargetResponse
+
+#-- Classes --#
 
 from spotmicro.Kinematics.SpotKinematics import SpotModel
 from spotmicro.GaitGenerator.Bezier import BezierGait
 
 
+#----------------------------#
 #---- Program Parameters ----#
+#----------------------------#
 
 # Controller Params
 STEPLENGTH_SCALE = 0.06
@@ -79,7 +89,9 @@ alpha = 0.7
 # -1 for all
 
 
+#----------------------------------------------------#
 #---- Class to Command SpotMiniMini Gazebo Model ----#
+#----------------------------------------------------#
 
 class SpotCommander():
     """
@@ -102,7 +114,7 @@ class SpotCommander():
         # Initializing walk node:
         rospy.init_node('walk_service', anonymous=True)
         
-        # Creating message and setting parameters:
+        # Creating message and setting parameters (start node with robot in Stop state):
         self.mini_cmd = MiniCmd()
 
         self.mini_cmd.x_velocity = 0.0
@@ -127,7 +139,7 @@ class SpotCommander():
         self.PenetrationDepth = self.BasePenetrationDepth
 
         # Parameters for movement
-        self.StepLength = 0.045
+        self.StepLength = 0.0 
         self.LateralFraction = 0.0
         self.YawRate = 0.0
 
@@ -266,12 +278,17 @@ class SpotCommander():
             
         Input: 
             WalkToTarget req: request object
+
         Output:
             None
+        
+        WARNING: req.dir_command is not a character, but an integer
+                 with the ASCII value for the desired character. To
+                 convert to character we use: chr(ASCII_CODE_VALUE)
         """
         try:            
             # Set parameters based on message content
-            if (req.dir_command == "F"):
+            if (chr(req.dir_command) == 'F'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.5 #0.001
                 self.StepLength = 0.045 #0.005
@@ -279,7 +296,7 @@ class SpotCommander():
                 self.YawRate = 0.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003	  
-            elif (req.dir_command == "L"):
+            elif (chr(req.dir_command) == 'L'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.011
@@ -287,7 +304,7 @@ class SpotCommander():
                 self.YawRate = 2.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003	
-            elif (req.dir_command == "R"):
+            elif (chr(req.dir_command) == 'R'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.011
@@ -295,7 +312,7 @@ class SpotCommander():
                 self.YawRate = -2.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003
-            elif (req.dir_command == "S"):
+            elif (chr(req.dir_command) == 'S'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.0
@@ -305,12 +322,12 @@ class SpotCommander():
                 self.PenetrationDepth = 0.003		
 
             # Store command letter
-            self.command_letter = req.dir_command
+            self.command_letter = chr(req.dir_command)
 
             # Move MiniMini Model
             self.Move()
 
-            #return WalkToTargetResponse("walking!")
+            return WalkToTargetResponse("walking!")
 		
         except rospy.ROSInterruptException:
             pass
@@ -400,13 +417,12 @@ def main():
         # Move MiniMini Model
         #mini_commander.Move()
         mini_commander.rate.sleep() # Wait to maintain the frequency constant
-        print("Walk node is alive")
         # rospy.spin()
 
 
 if __name__ == '__main__':
     try:
-        time.sleep(5.) # Wait for robot to fall down and stabilize (in seconds)
+        #time.sleep(5.) # Wait for robot to fall down and stabilize (in seconds)
         main()
     except rospy.ROSInterruptException:
         pass
