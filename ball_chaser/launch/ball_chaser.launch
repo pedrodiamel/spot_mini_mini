@@ -23,7 +23,13 @@
   <!-- Spawn robot controller -->
   <include file="$(find mini_ros)/launch/controller.launch"/>
 
-  <!-- Include Walk NODE -->
-  <include file="$(find mini_ros)/launch/walk.launch"/>
+
+  <!-- Launching Nodes -->
+  
+  <!-- Walk Node -->
+  <node name="walk" pkg="ball_chaser" type="walk_node.py" output="screen"/>
+  <!-- Guide Node -->
+  <node name="guide" pkg="ball_chaser" type="process_image" output="screen"/>
+
 
 </launch>

@@ -4,6 +4,9 @@
 <node name="MiniMini" pkg="mini_ros" type="walk_node.py" output="screen"/>
 
 <!-- Camera Guide -->
-<node name="Guide" pkg="mini_ros" type="guide_node.py" output="screen"/>
+<!-- Python -->
+<node name="guide" pkg="mini_ros" type="guide_node.py" output="screen"/> 
+<!-- C++ -->
+<!-- <node name="guide" pkg="mini_ros" type="process_image" output="screen"/> -->
 
 </launch>
