@@ -1,7 +1,7 @@
 spot:
   joint_states_controller:
       type: joint_state_controller/JointStateController
-      publish_rate: 50
+      publish_rate: 10
 
   joint_group_position_controller:
       type: effort_controllers/JointTrajectoryController
@@ -20,15 +20,29 @@ spot:
           - motor_back_right_lower_leg
 
       gains:
-        motor_front_left_hip        : {p: 100.0, d: 0.01, i: 10.0}
-        motor_front_left_upper_leg  : {p: 100.0, d: 0.01, i: 10.0}
-        motor_front_left_lower_leg  : {p: 100.0, d: 0.01, i: 10.0}
-        motor_front_right_hip       : {p: 100.0, d: 0.01, i: 10.0}
-        motor_front_right_upper_leg : {p: 100.0, d: 0.01, i: 10.0}
-        motor_front_right_lower_leg : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_left_hip         : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_left_upper_leg   : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_left_lower_leg   : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_right_hip        : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_right_upper_leg  : {p: 100.0, d: 0.01, i: 10.0}
-        motor_back_right_lower_leg  : {p: 100.0, d: 0.01, i: 10.0}
+        motor_front_left_hip        : {p: 8.0, d: 0.4, i: 0.1}
+        motor_front_left_upper_leg  : {p: 8.0, d: 0.4, i: 0.1}
+        motor_front_left_lower_leg  : {p: 8.0, d: 0.4, i: 0.1}
+        motor_front_right_hip       : {p: 8.0, d: 0.4, i: 0.1}
+        motor_front_right_upper_leg : {p: 8.0, d: 0.4, i: 0.1}
+        motor_front_right_lower_leg : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_left_hip         : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_left_upper_leg   : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_left_lower_leg   : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_right_hip        : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_right_upper_leg  : {p: 8.0, d: 0.4, i: 0.1}
+        motor_back_right_lower_leg  : {p: 8.0, d: 0.4, i: 0.1}
+
+    #   gains:
+    #     motor_front_left_hip        : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_front_left_upper_leg  : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_front_left_lower_leg  : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_front_right_hip       : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_front_right_upper_leg : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_front_right_lower_leg : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_left_hip         : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_left_upper_leg   : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_left_lower_leg   : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_right_hip        : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_right_upper_leg  : {p: 50.0, d: 0.5, i: 1.000}
+    #     motor_back_right_lower_leg  : {p: 50.0, d: 0.5, i: 1.000}

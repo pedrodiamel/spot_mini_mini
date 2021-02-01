@@ -11,7 +11,6 @@ import copy
 import sys
 import numpy as np
 import math
-import time
 
 import rospy
 import rospkg
@@ -55,7 +54,7 @@ actions_to_filter = rospy.get_param("actions_to_filter")
 
 
 class SpotCommander():
-    def __init__(self, Agent=False, contacts=False, time_step = 0.01):
+    def __init__(self, Agent=False, contacts=False):
 
         self.Agent = Agent
         self.agent_num = rospy.get_param("agent_num")
@@ -74,9 +73,6 @@ class SpotCommander():
         self.mini_cmd.z = 0.0
         self.mini_cmd.motion = "Stop"
         self.mini_cmd.movement = "Stepping"
-
-        # Time
-        self.time_step = time_step
 
         # FIXED
         self.BaseStepVelocity = rospy.get_param("BaseStepVelocity")
@@ -129,7 +125,7 @@ class SpotCommander():
         self.T_bf = copy.deepcopy(self.T_bf0)
 
         # See spot_params.yaml in config
-        self.bzg = BezierGait(dt=self.time_step, Tswing=rospy.get_param("Tswing"))
+        self.bzg = BezierGait(dt=rospy.get_param("dt"), Tswing=rospy.get_param("Tswing"))
 
         if self.Agent:
             self.load_spot(contacts, agent_num=self.agent_num)
@@ -225,7 +221,7 @@ class SpotCommander():
             # log input data as debug-level message
             rospy.logdebug(imu)
             # print("TESTE")
-            # print(self.imu)
+            print(self.imu)
         except rospy.ROSInterruptException:
             pass
 
@@ -390,16 +386,6 @@ class SpotCommander():
                                                 self.PenetrationDepth,
                                                 self.contacts, dt)
 
-        print("StepLength = %f"%(StepLength))     
-        print("StepVelocity = %f"%(self.StepVelocity))            
-        print("ClearanceHeight = %f"%(self.ClearanceHeight))       
-        print("PenetrationDepth = %f"%(self.PenetrationDepth))
-        print("LateralFraction = %f"%(LateralFraction))   
-        print("YawRate = %f"%(YawRate))
-        print("Tswing = %f"%(self.SwingPeriod))
-        print("\n")
-
-
         T_bf_copy = copy.deepcopy(self.T_bf)
         # OPTIONAL: Agent
         if self.Agent and self.mini_cmd.motion != "Stop":
@@ -457,24 +443,13 @@ class SpotCommander():
 
 def main():
     """ The main() function. """
-    rospy.loginfo_once("STARTING SPOT TEST ENV")
-    time_step =  0.01 #0.01
-    max_timesteps = 4e6 # 2.3e5
-    mini_commander = SpotCommander(time_step)
-    #rate = rospy.Rate(600.0)
-
-    t = 0
-    while t < (int(max_timesteps)):
-        start_time = time.time()
-
+    mini_commander = SpotCommander()
+    rate = rospy.Rate(600.0)
+    while not rospy.is_shutdown():
+        # This is called continuously. Has timeout functionality too
         mini_commander.move()
-
-        t += 1
-        # elapsed time == sample time
-        elapsed_time = time.time() - start_time
-        if elapsed_time < mini_commander.time_step:
-            time.sleep(mini_commander.time_step - elapsed_time)
-
+        rate.sleep()
+        # rospy.spin()
 
 
 if __name__ == '__main__':
