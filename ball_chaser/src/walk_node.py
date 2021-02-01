@@ -12,8 +12,7 @@
 DESCRIPTION: Creates node that sets the walk parameters and makes the SpotMiniMini
              simulation in Gazebo walk based on a 12 point Bezier Curve.
 
-SUBSCRIBERS: /command - receives a character to indicate direction of movement
-             /mini_cmd - store high level information of movement 
+SUBSCRIBERS: /mini_cmd - store high level information of movement 
 
 PUBLISHERS: spot/front_left_hip_position_controller/command
             spot/front_left_leg_position_controller/command
@@ -27,36 +26,49 @@ PUBLISHERS: spot/front_left_hip_position_controller/command
             spot/back_right_hip_position_controller/command
             spot/back_right_leg_position_controller/command
             spot/back_right_foot_position_controller/command
+
+SERVICES:   /command - receives a character to indicate direction of movement
 """
 
-
+#------------------------------------------#
 #---- Importing Libraries and Packages ----#
+#------------------------------------------#
+
+#-- Libraries --#
 
 # from __future__ import division
 import os
 import rospy
 import numpy as np
-from mini_ros.msg import MiniCmd
-from std_msgs.msg import String
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import copy
 import time
-
-import sys
 
 import rospkg 
 rospack = rospkg.RosPack()
 
-
+import sys
 sys.path.append(rospack.get_path('mini_ros') + '/../')
-
 sys.path.append('../../')
+
+#-- Messages --#
+
+from mini_ros.msg import MiniCmd
+# from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+#-- Services --#
+
+from ball_chaser.srv import WalkToTarget, WalkToTargetResponse
+
+#-- Classes --#
 
 from spotmicro.Kinematics.SpotKinematics import SpotModel
 from spotmicro.GaitGenerator.Bezier import BezierGait
 
 
+#----------------------------#
 #---- Program Parameters ----#
+#----------------------------#
 
 # Controller Params
 STEPLENGTH_SCALE = 0.06
@@ -77,7 +89,9 @@ alpha = 0.7
 # -1 for all
 
 
+#----------------------------------------------------#
 #---- Class to Command SpotMiniMini Gazebo Model ----#
+#----------------------------------------------------#
 
 class SpotCommander():
     """
@@ -98,9 +112,9 @@ class SpotCommander():
         """
 
         # Initializing walk node:
-        rospy.init_node('Walk', anonymous=True)
+        rospy.init_node('walk_service', anonymous=True)
         
-        # Creating message and setting parameters:
+        # Creating message and setting parameters (start node with robot in Stop state):
         self.mini_cmd = MiniCmd()
 
         self.mini_cmd.x_velocity = 0.0
@@ -125,7 +139,7 @@ class SpotCommander():
         self.PenetrationDepth = self.BasePenetrationDepth
 
         # Parameters for movement
-        self.StepLength = 0.045
+        self.StepLength = 0.0 
         self.LateralFraction = 0.0
         self.YawRate = 0.0
 
@@ -139,7 +153,10 @@ class SpotCommander():
         self.SetPublishers()
 
         # Define Subscribers:
-        self.SetSubscribers()
+        #self.SetSubscribers()
+
+        # Define Services:
+        self.SetServices()
         
         # Get curret time as simulation start time:
         self.time = rospy.get_time()
@@ -221,10 +238,19 @@ class SpotCommander():
         """
 
         self.sub_cmd = rospy.Subscriber('mini_cmd', MiniCmd, self.mini_cmd_cb)
-        self.sub_guide = rospy.Subscriber("/command", String, self.guide_cb)
+        # self.sub_guide = rospy.Subscriber("/command", String, self.guide_cb)
+
+    #---- Define Motion Services ----#
+
+    def SetServices(self):
+        """
+        Define service for the ball chaser demo.
+        """
+
+        self.srv_guide = rospy.Service('/command', WalkToTarget, self.guide_cb)
 
 
-    #---- Subscribers Callback functions ----#
+    #---- Subscribers and Services Callback functions ----#
 
     def mini_cmd_cb(self, mini_cmd): # We are not actually using this callback yet...
         """ Reads the desired Minitaur command and passes it for execution
@@ -240,7 +266,7 @@ class SpotCommander():
             pass
     
 
-    def guide_cb(self, msg):
+    def guide_cb(self, req):
         """ 
         Receives a command message to guide the robot walking action by 
         setting the walk parameters.
@@ -251,13 +277,18 @@ class SpotCommander():
             S : stop
             
         Input: 
-            String msg: command message
+            WalkToTarget req: request object
+
         Output:
             None
+        
+        WARNING: req.dir_command is not a character, but an integer
+                 with the ASCII value for the desired character. To
+                 convert to character we use: chr(ASCII_CODE_VALUE)
         """
         try:            
             # Set parameters based on message content
-            if (msg.data == "F"):
+            if (chr(req.dir_command) == 'F'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.5 #0.001
                 self.StepLength = 0.045 #0.005
@@ -265,7 +296,7 @@ class SpotCommander():
                 self.YawRate = 0.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003	  
-            elif (msg.data == "L"):
+            elif (chr(req.dir_command) == 'L'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.011
@@ -273,7 +304,7 @@ class SpotCommander():
                 self.YawRate = 2.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003	
-            elif (msg.data == "R"):
+            elif (chr(req.dir_command) == 'R'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.011
@@ -281,7 +312,7 @@ class SpotCommander():
                 self.YawRate = -2.0
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003
-            elif (msg.data == "S"):
+            elif (chr(req.dir_command) == 'S'):
                 self.SwingPeriod = 0.2
                 self.StepVelocity = 0.001
                 self.StepLength = 0.0
@@ -290,11 +321,13 @@ class SpotCommander():
                 self.ClearanceHeight = 0.045
                 self.PenetrationDepth = 0.003		
 
-            # Move MiniMini Model
-            # self.Move(StepLength, LateralFraction,YawRate)
-
             # Store command letter
-            self.command_letter = msg.data
+            self.command_letter = chr(req.dir_command)
+
+            # Move MiniMini Model
+            self.Move()
+
+            return WalkToTargetResponse("walking!")
 		
         except rospy.ROSInterruptException:
             pass
@@ -346,22 +379,21 @@ class SpotCommander():
         self.InitMsg()
         p = JointTrajectoryPoint()
 
-        # Front Left Leg:
-        p.positions.append( joint_angles[0][0] ) #hip
-        p.positions.append( joint_angles[0][1] ) #upper_leg
-        p.positions.append( joint_angles[0][2] ) #lower_leg
-        # Front Right Leg:
-        p.positions.append( joint_angles[1][0] ) #hip
-        p.positions.append( joint_angles[1][1] ) #upper_leg
-        p.positions.append( joint_angles[1][2] ) #lower_leg
-        # Back Left Leg:
-        p.positions.append( joint_angles[2][0] ) #hip
-        p.positions.append( joint_angles[2][1] ) #upper_leg
-        p.positions.append( joint_angles[2][2] ) #lower_leg
-        # Back Right Leg:
-        p.positions.append( joint_angles[3][0] ) #hip
-        p.positions.append( joint_angles[3][1] ) #upper_leg
-        p.positions.append( joint_angles[3][2] ) #lower_leg
+        p.positions.append( joint_angles[0][0] )
+        p.positions.append( joint_angles[0][1] )
+        p.positions.append( joint_angles[0][2] )
+
+        p.positions.append( joint_angles[1][0] )
+        p.positions.append( joint_angles[1][1] )
+        p.positions.append( joint_angles[1][2] )
+
+        p.positions.append( joint_angles[2][0] )
+        p.positions.append( joint_angles[2][1] )
+        p.positions.append( joint_angles[2][2] )
+
+        p.positions.append( joint_angles[3][0] )
+        p.positions.append( joint_angles[3][1] )
+        p.positions.append( joint_angles[3][2] )
 
         self.jt_msg.points.append(p)
 
@@ -376,21 +408,21 @@ class SpotCommander():
 def main():
     """ The main() function. """
     mini_commander = SpotCommander()
-    rate = rospy.Rate(600.0) # Frequency of the cycle to make reading uniform (Hz)
+    #rate = rospy.Rate(600.0) # Frequency of the cycle to make reading uniform (Hz)
      
     while not rospy.is_shutdown():
         # This is called continuously. Has timeout functionality too
         #mini_commander.Move()
         #rate.sleep() # Wait to maintain the frequency constant
         # Move MiniMini Model
-        mini_commander.Move()
-        mini_commander.rate.sleep()
+        #mini_commander.Move()
+        mini_commander.rate.sleep() # Wait to maintain the frequency constant
         # rospy.spin()
 
 
 if __name__ == '__main__':
     try:
-        time.sleep(5.) # Wait for robot to fall down and stabilize (in seconds)
+        #time.sleep(5.) # Wait for robot to fall down and stabilize (in seconds)
         main()
     except rospy.ROSInterruptException:
         pass
